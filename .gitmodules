@@ -1,0 +1,4 @@
+[submodule ".nn-build"]
+	path = .nn-build
+	url = https://github.com/nenoneca/nn-app-build.git
+	branch = nn/main/dev

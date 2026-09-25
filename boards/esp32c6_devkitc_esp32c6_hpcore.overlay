@@ -1,0 +1,67 @@
+/*
+ * DTS overlay for the mdns_ot_esp32c6 sensor sample.
+ *
+ * - On-board WS2812 RGB LED on GPIO 8 as a led-strip device, used by
+ *   the "led" actuator field.  Driven via I2S + DMA, not SPI — ESP32-C6
+ *   FSPI inserts inter-byte idle gaps that break WS2812 timing after the
+ *   first transfer.  Mirrors Espressif's reference at
+ *   third_party/zephyr/samples/drivers/led/led_strip/boards/
+ *     esp32c6_devkitc_hpcore.overlay.
+ * - On-board BOOT button on GPIO 9 as the `sw0` alias, used by
+ *   node_mgr/button (NODE_MGR_BUTTON_{FLIP,TOGGLE}).  Active-low with
+ *   internal pull-up — GPIO 9 is also a strap pin so it must idle high
+ *   at reset; with the button up at reset that's automatic.
+ */
+
+#include <zephyr/dt-bindings/led/led.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+&i2s_default {
+	group1 {
+		pinmux = <I2S_O_SD_GPIO8>;
+	};
+};
+
+i2s_led: &i2s {
+	status = "okay";
+
+	dmas = <&dma 3>;
+	dma-names = "tx";
+
+	led_strip: ws2812@0 {
+		compatible = "worldsemi,ws2812-i2s";
+
+		reg = <0>;
+		chain-length = <1>;
+		/* ESP32-C6 DevKitC's on-board WS2812 chip is RGB byte-order
+		 * (not the more common GRB).  With GRB mapping the cb's
+		 * green=0x40 lands in the chip's red slot and the LED blinks
+		 * red.  Use RED-GREEN-BLUE here so struct.r → wire byte 0. */
+		color-mapping = <LED_COLOR_ID_RED
+				 LED_COLOR_ID_GREEN
+				 LED_COLOR_ID_BLUE>;
+		reset-delay = <500>;
+	};
+};
+
+&dma {
+	status = "okay";
+};
+
+/ {
+	aliases {
+		led-strip = &led_strip;
+		sw0 = &on_off_button;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+
+		on_off_button: button_0 {
+			gpios = <&gpio0 9 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <INPUT_KEY_0>;
+			label = "on-off-button";
+		};
+	};
+};

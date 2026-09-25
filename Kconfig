@@ -1,0 +1,33 @@
+mainmenu "mdns_ot_esp32c6 — Thread mesh with mDNS messaging"
+
+config APP_DEVICE_NAME
+	string "Default mDNS hostname"
+	default "device1"
+	help
+	  Hostname advertised via mDNS as <name>.local.
+	  Override at runtime with 'mesh name <name>'; persisted in NVS.
+
+config APP_HOSTNAME_SIZE
+	int
+	default 32
+
+config APP_DEVICE_TYPE
+	string "Device type for OTA firmware matching"
+	default "sample_c6"
+	help
+	  Identifies this device type when checking the hub for firmware updates.
+	  Must match the type used with 'nn-hub firmware upload <type> ...'.
+
+config APP_OTA_CHECK_INTERVAL_MIN
+	int "OTA check interval (minutes, 0 = manual only)"
+	default 0
+	range 0 1440
+	help
+	  How often to automatically check the hub for firmware updates.
+	  Set to 0 to disable automatic checks (use 'mesh ota check' instead).
+
+# nn-modules location comes from the NN_MODULES_DIR env var (set by the
+# standalone nn-app-build script, or by the monorepo build.sh).
+source "$(NN_MODULES_DIR)/libs/node_mgr/Kconfig"
+
+source "Kconfig.zephyr"

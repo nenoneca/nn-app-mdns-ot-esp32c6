@@ -1,0 +1,4 @@
+device_type: sample_c6
+toolchain: zephyr
+board: esp32c6_devkitc/esp32c6/hpcore
+sysbuild: true
